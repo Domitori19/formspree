@@ -11,12 +11,10 @@ Optional environment variables (in `.env` or `docker-compose.yml`):
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `MCP_BEARER_TOKEN` | empty | If set, every request to `/mcp` must send `Authorization: Bearer <token>` |
-| `MCP_PUBLIC_URL` | `http://127.0.0.1:9090/mcp` | Public URL of the server (used for auth metadata) |
-| `MCP_PATH` | `/mcp` | HTTP path of the MCP endpoint |
+| `MCP_PATH` | `/mcp` | HTTP path of the MCP endpoint. On a server set a secret path (`/mcp/<long-random-code>`): the URL itself is the access key |
 | `ENABLE_SUBMIT_FORM` | `false` | Expose the `submit_form` tool |
 
-Without `MCP_BEARER_TOKEN` the server has no authentication — use that only on
+With the default `/mcp` path the server is open — use that only on
 `127.0.0.1`. For deployment on a server see `../mcp-deploy/README.md`.
 
 ## Run

@@ -95,12 +95,3 @@ def test_submit_form_not_registered_by_default():
     tool_names = [tool.name for tool in server.mcp._tool_manager.list_tools()]
     assert "submit_form" not in tool_names
     assert "list_all_forms" in tool_names
-
-async def test_bearer_token_verifier():
-    from src.auth import StaticBearerTokenVerifier
-
-    verifier = StaticBearerTokenVerifier("secret-token")
-    assert await verifier.verify_token("wrong-token") is None
-    access = await verifier.verify_token("secret-token")
-    assert access is not None
-    assert access.scopes == ["formspree:read"]
