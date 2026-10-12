@@ -1,6 +1,6 @@
 # Серверный запуск Formspree MCP (копируется CI/CD в /opt/mcp/formspree).
 # Рядом на сервере должны лежать (вручную, в git их нет):
-#   .env        — MCP_BEARER_TOKEN, MCP_PUBLIC_URL
+#   .env        — MCP_PATH (секретный путь /mcp/<код>), MCP_PUBLIC_URL
 #   forms.json  — формы и API-ключи Formspree
 # Порт наружу не открывается: доступ только через Caddy бота по сети telegrambotnew_default.
 
@@ -14,7 +14,6 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 9090
-      MCP_PATH: /mcp
     volumes:
       - ./forms.json:/app/forms.json:ro
     command: python -m src.server --http
