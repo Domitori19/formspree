@@ -1,11 +1,23 @@
 # Formspree MCP Server
 
-MCP server for working with 43 Formspree forms from Claude Desktop.
+MCP server for working with Formspree forms (56 forms) from Claude.
 
 ## Configuration
 
-The server has no `.env` file. Form IDs, names, and API keys are stored in
-`forms.json`, which Docker mounts read-only at `/app/forms.json`.
+Form IDs, names, and API keys are stored in `forms.json`, which Docker mounts
+read-only at `/app/forms.json`.
+
+Optional environment variables (in `.env` or `docker-compose.yml`):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `MCP_BEARER_TOKEN` | empty | If set, every request to `/mcp` must send `Authorization: Bearer <token>` |
+| `MCP_PUBLIC_URL` | `http://127.0.0.1:9090/mcp` | Public URL of the server (used for auth metadata) |
+| `MCP_PATH` | `/mcp` | HTTP path of the MCP endpoint |
+| `ENABLE_SUBMIT_FORM` | `false` | Expose the `submit_form` tool |
+
+Without `MCP_BEARER_TOKEN` the server has no authentication — use that only on
+`127.0.0.1`. For deployment on a server see `../mcp-deploy/README.md`.
 
 ## Run
 
@@ -14,15 +26,16 @@ docker compose up -d --build
 docker compose ps
 ```
 
-SSE is available locally at `http://127.0.0.1:9090/sse`.
+Streamable HTTP is available locally at `http://127.0.0.1:9090/mcp`,
+health check at `http://127.0.0.1:9090/health`.
 
-Claude Desktop connects to the running container over stdio:
+Claude Desktop can also connect to the running container over stdio:
 
 ```json
 {
   "mcpServers": {
     "formspree": {
-      "command": "C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe",
+      "command": "C:\Program Files\Docker\Docker\resources\bin\docker.exe",
       "args": [
         "exec",
         "-i",
@@ -42,7 +55,7 @@ Claude Desktop connects to the running container over stdio:
 - `compare_forms_leaderboard`
 - `get_form_analytics`
 - `list_submissions`
-- `submit_form`
+- `submit_form` (only when `ENABLE_SUBMIT_FORM=true`)
 
 ## Tests
 

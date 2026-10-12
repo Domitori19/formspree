@@ -1,0 +1,13 @@
+# Секреты: лежат только на сервере / локально, в git не попадают
+forms.json
+forms.json.bak*
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Отчёты
+*.xlsx

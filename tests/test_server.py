@@ -1,12 +1,13 @@
 import json
 import pytest
+from datetime import datetime, timezone, timedelta
 from src import server
 
-async def test_list_all_forms_returns_registered_forms():
+async def test_list_all_forms_returns_registered_forms(expected_forms_count):
     res_str = await server.list_all_forms()
     res = json.loads(res_str)
     assert res["success"] is True
-    assert res["total_forms_found"] == 43
+    assert res["total_forms_found"] == expected_forms_count
 
 async def test_list_all_forms_with_search_query():
     res_str = await server.list_all_forms(query="карпаты")
@@ -53,7 +54,7 @@ async def test_get_form_analytics_tool(monkeypatch):
     async def fake_fetch_all_submissions(form_id, since=None):
         return {
             "success": True,
-            "submissions": [{"_date": "2026-08-10T12:00:00Z", "data": {"name": "Test"}}],
+            "submissions": [{"_date": (datetime.now(timezone.utc) - timedelta(days=2)).isoformat(), "data": {"name": "Test"}}],
         }
 
     monkeypatch.setattr(server, "fetch_all_submissions", fake_fetch_all_submissions)
@@ -88,3 +89,18 @@ async def test_submit_form_tool(monkeypatch):
 
     assert res["success"] is True
     assert res["status_code"] == 200
+
+def test_submit_form_not_registered_by_default():
+    assert server.ENABLE_SUBMIT_FORM is False
+    tool_names = [tool.name for tool in server.mcp._tool_manager.list_tools()]
+    assert "submit_form" not in tool_names
+    assert "list_all_forms" in tool_names
+
+async def test_bearer_token_verifier():
+    from src.auth import StaticBearerTokenVerifier
+
+    verifier = StaticBearerTokenVerifier("secret-token")
+    assert await verifier.verify_token("wrong-token") is None
+    access = await verifier.verify_token("secret-token")
+    assert access is not None
+    assert access.scopes == ["formspree:read"]

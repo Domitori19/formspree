@@ -1,10 +1,10 @@
 import pytest
 from src.config import find_forms, get_form_info, load_forms_from_json
 
-def test_load_forms_from_json():
+def test_load_forms_from_json(expected_forms_count):
     load_forms_from_json()
     forms = find_forms()
-    assert len(forms) == 43
+    assert len(forms) == expected_forms_count
 
 def test_find_forms_by_cyrillic_query():
     # Поиск "карпаты" должен переводиться в unidecode и находить формы Karpaty
@@ -17,9 +17,9 @@ def test_find_forms_by_tag_or_category():
     assert len(results) > 0
     assert any("balkany" in f["name"].lower() for f in results)
 
-def test_find_forms_empty_query_returns_all():
+def test_find_forms_empty_query_returns_all(expected_forms_count):
     forms = find_forms("")
-    assert len(forms) == 43
+    assert len(forms) == expected_forms_count
 
 def test_get_form_info_by_id():
     info = get_form_info("mdavnpok")

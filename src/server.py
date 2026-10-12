@@ -6,7 +6,13 @@
 2. compare_forms_leaderboard — Сводный Лидерборд по всем направлениям.
 3. get_form_analytics — детализация и график по любой из 43 форм.
 4. list_submissions — вывод таблицы лидов по любой форме.
-5. submit_form — отправка данных в форму.
+5. submit_form — отправка данных в форму (только если ENABLE_SUBMIT_FORM=true).
+
+Режимы запуска:
+- STDIO (по умолчанию) — для локального подключения через `docker exec`.
+- Streamable HTTP (TRANSPORT=streamable-http или --http) — для подключения по сети.
+  Если задан MCP_BEARER_TOKEN, каждый запрос к /mcp должен содержать
+  заголовок `Authorization: Bearer <токен>`.
 """
 
 import sys
@@ -35,12 +41,45 @@ from src.analytics import (
     format_markdown_table,
     generate_cross_form_leaderboard
 )
+from src.auth import StaticBearerTokenVerifier
+from mcp.server.auth.settings import AuthSettings
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+# Настройки сетевого режима (берутся из переменных окружения)
+MCP_BEARER_TOKEN = os.getenv("MCP_BEARER_TOKEN", "").strip()
+MCP_PUBLIC_URL = os.getenv("MCP_PUBLIC_URL", "http://127.0.0.1:9090/mcp").strip()
+MCP_PATH = os.getenv("MCP_PATH", "/mcp").strip() or "/mcp"
+ENABLE_SUBMIT_FORM = os.getenv("ENABLE_SUBMIT_FORM", "false").strip().lower() in ("1", "true", "yes")
+
+# Авторизация по токену включается только если задан MCP_BEARER_TOKEN
+token_verifier = None
+auth = None
+if MCP_BEARER_TOKEN:
+    token_verifier = StaticBearerTokenVerifier(MCP_BEARER_TOKEN)
+    auth = AuthSettings(
+        issuer_url=MCP_PUBLIC_URL,
+        resource_server_url=MCP_PUBLIC_URL,
+        required_scopes=["formspree:read"],
+    )
 
 # 1. Создаем экземпляр FastMCP Сервера
 mcp = FastMCP(
     name="Formspree 43-Forms Multi-Server",
-    instructions="MCP Сервер для аналитики и управления 43 турами и направлениями."
+    instructions="MCP Сервер для аналитики и управления 43 турами и направлениями.",
+    token_verifier=token_verifier,
+    auth=auth
 )
+
+@mcp.custom_route("/health", methods=["GET"], include_in_schema=False)
+async def health_check(_: Request) -> JSONResponse:
+    """Проверка состояния для Docker и прокси. Не требует токена и не раскрывает данных."""
+    return JSONResponse({
+        "status": "ok",
+        "service": "formspree-mcp",
+        "transport": "streamable-http",
+        "forms_loaded": len(FORMS_BY_ID)
+    })
 
 @mcp.tool()
 async def list_all_forms(query: Optional[str] = None) -> str:
@@ -167,7 +206,6 @@ async def list_submissions(
         "submissions": submissions_list
     }, indent=2, ensure_ascii=False)
 
-@mcp.tool()
 async def submit_form(
     data: Dict[str, Any],
     form_id_or_name: Optional[str] = None,
@@ -179,13 +217,25 @@ async def submit_form(
     res = await submit_to_formspree(data=data, form_id=form_id_or_name, email=email)
     return json.dumps(res, indent=2, ensure_ascii=False)
 
+# Отправка заявок выключена по умолчанию, чтобы через сервер нельзя было слать фейковые лиды
+if ENABLE_SUBMIT_FORM:
+    mcp.tool()(submit_form)
+
 if __name__ == "__main__":
-    # Выбор режима работы: STDIO (по умолчанию) или SSE HTTP сервер на выбранном порту
+    # Выбор режима работы: STDIO (по умолчанию) или Streamable HTTP на выбранном порту
     transport = os.getenv("TRANSPORT", "stdio").lower()
-    if "--sse" in sys.argv or transport == "sse":
+    if "--http" in sys.argv or transport in ("http", "streamable-http"):
         port = int(os.getenv("PORT", "9090"))
         host = os.getenv("HOST", "0.0.0.0")
-        print(f"Запуск MCP сервера в режиме SSE на http://{host}:{port}/sse")
-        mcp.run(transport="sse", host=host, port=port)
+        auth_mode = "bearer token" if MCP_BEARER_TOKEN else "БЕЗ ТОКЕНА — только для локального запуска"
+        print(f"Запуск MCP сервера (streamable-http) на http://{host}:{port}{MCP_PATH} ({auth_mode})")
+        mcp.run(
+            transport="streamable-http",
+            host=host,
+            port=port,
+            streamable_http_path=MCP_PATH,
+            stateless_http=True,
+            json_response=True
+        )
     else:
         mcp.run()
