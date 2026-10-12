@@ -1,11 +1,11 @@
 """
-МОДУЛЬ MCP СЕРВЕРА ДЛЯ CLAUDE DESKTOP (src/server.py)
-----------------------------------------------------
-Предоставляет 5 инструментов для Claude Desktop:
-1. list_all_forms — просмотр и поиск подключенных 43 форм.
-2. compare_forms_leaderboard — Сводный Лидерборд по всем направлениям.
-3. get_form_analytics — детализация и график по любой из 43 форм.
-4. list_submissions — вывод таблицы лидов по любой форме.
+MCP-СЕРВЕР FORMSPREE (src/server.py)
+------------------------------------
+Инструменты:
+1. list_all_forms — просмотр и поиск подключённых форм.
+2. compare_forms_leaderboard — сводный лидерборд по всем направлениям.
+3. get_form_analytics — детализация и график по любой форме.
+4. list_submissions — таблица лидов по любой форме.
 5. submit_form — отправка данных в форму (только если ENABLE_SUBMIT_FORM=true).
 
 Режимы запуска:
@@ -18,12 +18,9 @@ import sys
 import os
 import json
 import asyncio
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 
-try:
-    from mcp.server.fastmcp import FastMCP
-except ImportError:
-    from mcp.server import MCPServer as FastMCP
+from mcp.server import MCPServer
 
 from src.config import (
     FORMS_BY_ID,
@@ -47,10 +44,9 @@ from starlette.responses import JSONResponse
 MCP_PATH = os.getenv("MCP_PATH", "/mcp").strip() or "/mcp"
 ENABLE_SUBMIT_FORM = os.getenv("ENABLE_SUBMIT_FORM", "false").strip().lower() in ("1", "true", "yes")
 
-# 1. Создаем экземпляр FastMCP Сервера
-mcp = FastMCP(
-    name="Formspree 43-Forms Multi-Server",
-    instructions="MCP Сервер для аналитики и управления 43 турами и направлениями."
+mcp = MCPServer(
+    name="Formspree Forms Analytics",
+    instructions="Аналитика заявок Formspree по всем подключённым турам и направлениям."
 )
 
 @mcp.custom_route("/health", methods=["GET"], include_in_schema=False)
@@ -66,7 +62,7 @@ async def health_check(_: Request) -> JSONResponse:
 @mcp.tool()
 async def list_all_forms(query: Optional[str] = None) -> str:
     """
-    Инструмент 1: Возвращает список всех 43 подключенных форм.
+    Инструмент 1: Возвращает список всех подключённых форм.
     Поддерживает поиск по слову (например: 'карпаты', 'италия', 'лаванда').
     """
     matched_forms = find_forms(query)
@@ -85,7 +81,7 @@ async def compare_forms_leaderboard(
     query: Optional[str] = None
 ) -> str:
     """
-    Инструмент 2: Строит СВОДНЫЙ РЕЙТИНГ (ЛИДЕРБОРД) по всем 43 турам.
+    Инструмент 2: Строит сводный рейтинг (лидерборд) по всем турам.
     Показывает, какая форма на 1 месте, а где продажи просели.
     """
     target_forms = find_forms(query)
@@ -131,7 +127,7 @@ async def get_form_analytics(
     since: Optional[str] = None
 ) -> str:
     """
-    Инструмент 3: Возвращает детализированную аналитику и график по любой из 43 форм.
+    Инструмент 3: Возвращает детализированную аналитику и график по любой форме.
     Можно передавать как ID ('xoeaadqn'), так и Название ('balkany' или 'карпаты').
     """
     form_info = get_form_info(form_id_or_name)

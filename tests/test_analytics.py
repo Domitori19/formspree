@@ -1,4 +1,3 @@
-import pytest
 from datetime import datetime, timezone, timedelta
 from src.analytics import (
     compare_periods,

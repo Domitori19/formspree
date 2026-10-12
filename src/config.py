@@ -2,11 +2,12 @@
 МОДУЛЬ КОНФИГУРАЦИИ И РЕЕСТРА ФОРМ (src/config.py)
 -------------------------------------------------
 Файл отвечает за:
-1. Загрузку списка из 43 форм и их ключей из файла forms.json.
+1. Загрузку списка форм и их ключей из файла forms.json.
 2. Поиск форм по ID, сайтам и ключевым словам.
 """
 
 import json
+import sys
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from unidecode import unidecode
@@ -31,7 +32,8 @@ def load_forms_from_json() -> None:
     forms_file_path = root_dir / "forms.json"
 
     if not forms_file_path.exists():
-        print(f"Предупреждение: Файл {forms_file_path} не найден.")
+        # stderr, а не stdout: в режиме STDIO stdout занят протоколом MCP
+        print(f"Предупреждение: Файл {forms_file_path} не найден.", file=sys.stderr)
         return
 
     try:
@@ -60,7 +62,7 @@ def load_forms_from_json() -> None:
                     FORMS_BY_ID[form_id.lower()] = form_entry
                     FORMS_BY_NAME[form_name.lower()] = form_entry
     except Exception as error:
-        print(f"Ошибка загрузки forms.json: {error}")
+        print(f"Ошибка загрузки forms.json: {error}", file=sys.stderr)
 
 # Загружаем реестр при запуске модуля
 load_forms_from_json()

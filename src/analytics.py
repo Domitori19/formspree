@@ -5,11 +5,11 @@
 1. unnest_submission — вынимает контакты клиенты из 'data'.
 2. generate_analytics — считает сводку за период, среднее в день и рисует график.
 3. compare_periods — сравнивает прошлые 30 дней с текущими 30 днями (% роста/падения).
-4. generate_cross_form_leaderboard — строит рейтинг по всем 43 турам с медалями.
+4. generate_cross_form_leaderboard — строит рейтинг по всем турам с медалями.
 """
 
 import re
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from datetime import datetime, timezone, timedelta
 import pandas as pd
 import plotext as plt
@@ -235,7 +235,7 @@ def generate_cross_form_leaderboard(
     threshold_percent: float = 15.0
 ) -> Dict[str, Any]:
     """
-    Строит рейтинг туров (Лидерборд) по всем 43 направлениям с медалями 🥇, 🥈, 🥉.
+    Строит рейтинг туров (лидерборд) по всем направлениям с медалями 🥇, 🥈, 🥉.
     """
     leaderboard = []
     failed_forms_count = 0

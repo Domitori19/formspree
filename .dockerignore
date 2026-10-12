@@ -1,11 +1,22 @@
+# Секреты: в образ и в контекст сборки не попадают
 .env
+forms.json
+forms.json.bak*
+
+# Служебное
 .git
+.github
 .pytest_cache
 __pycache__
 **/__pycache__
 *.py[cod]
 *.log
+*.xlsx
+
+# Не нужно в образе (в нём только src/)
+deploy
 tests
 pytest.ini
 requirements-dev.txt
+forms.example.json
 README.md
