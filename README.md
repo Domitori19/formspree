@@ -46,8 +46,8 @@ Files that live **only on the server** (not in git):
 | `/opt/mcp/formspree/.env` | `MCP_PATH=/mcp/<secret-code>` |
 | `/opt/mcp/formspree/forms.json` | form IDs, names and Formspree API keys |
 
-The container has no public port: Caddy of the bot project proxies
-`formspree-mcp.navsi100.travel` to `mcp-formspree:9090` over the `telegrambotnew_default` network.
+The container has no public port: the shared Caddy (repo `caddy-config`) proxies
+`formspree-mcp.navsi100.travel` to `mcp-formspree:9090` over the `proxy` network.
 
 Rotate the secret URL (the old one stops working immediately):
 

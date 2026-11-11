@@ -2,7 +2,7 @@
 # Рядом на сервере должны лежать (вручную, в git их нет):
 #   .env        — MCP_PATH (секретный путь /mcp/<код>): он и есть ключ доступа
 #   forms.json  — формы и API-ключи Formspree
-# Порт наружу не открывается: доступ только через Caddy бота по сети telegrambotnew_default.
+# Порт наружу не открывается: доступ только через общий Caddy (репозиторий caddy-config) по сети proxy.
 
 services:
   formspree-mcp:
@@ -25,9 +25,9 @@ services:
       retries: 3
       start_period: 5s
     networks:
-      - caddy
+      - proxy
 
 networks:
-  caddy:
+  proxy:
     external: true
-    name: telegrambotnew_default
+    name: proxy
